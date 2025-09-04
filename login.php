@@ -1,5 +1,5 @@
 <?php
-session_start(); 
+session_start();
 require_once 'config.php';
 
 $error = '';
@@ -87,13 +87,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="post">
             <div class="mb-3">
                 <label for="username_or_email" class="form-label">ชื่อผู้ใช้หรืออีเมล</label>
-                <input type="text" name="username_or_email" id="username_or_email" 
-                       class="form-control" placeholder="ชื่อผู้ใช้หรืออีเมล" required>
+                <input type="text" name="username_or_email" id="username_or_email" class="form-control"
+                    placeholder="ชื่อผู้ใช้หรืออีเมล" required>
             </div>
             <div class="mb-3">
                 <label for="password" class="form-label">รหัสผ่าน</label>
-                <input type="password" name="password" id="password" 
-                       class="form-control" placeholder="รหัสผ่าน" required>
+                <input type="password" name="password" id="password" class="form-control" placeholder="รหัสผ่าน"
+                    required>
             </div>
             <div class="mt-4 text-center">
                 <button type="submit" class="btn btn-success btn-lg px-5">เข้าสู่ระบบ</button>

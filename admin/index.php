@@ -123,7 +123,7 @@ $username = htmlspecialchars($_SESSION['username'] ?? 'Admin');
                 <div class="action-card d-flex flex-column">
                     <div class="action-title">หมวดหมู่</div>
                     <div class="text-muted mb-3 small">จัดกลุ่มสินค้าให้เป็นระบบ</div>
-                    <a href="categories.php" class="btn btn-dark btn-big mt-auto">ไปที่หมวดหมู่</a>
+                    <a href="category.php" class="btn btn-dark btn-big mt-auto">ไปที่หมวดหมู่</a>
                 </div>
             </div>
         </div>
@@ -140,7 +140,7 @@ $username = htmlspecialchars($_SESSION['username'] ?? 'Admin');
                 <a href="users.php" class="btn btn-warning w-100 py-3">จัดการสมาชิก</a>
             </div>
             <div class="col-12 col-sm-6 col-lg-3">
-                <a href="categories.php" class="btn btn-dark w-100 py-3">จัดการหมวดหมู่</a>
+                <a href="category.php" class="btn btn-dark w-100 py-3">จัดการหมวดหมู่</a>
             </div>
         </div>
     </div>

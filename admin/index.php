@@ -1,150 +1,159 @@
 <?php
 session_start();
-require_once '../config.php';      // เชื่อมต่อฐานข้อมูล
-require_once 'auth_admin.php';     // ตรวจสิทธิ์แอดมิน
+require_once '../config.php';
 
-// กัน session ว่าง
-$username = htmlspecialchars($_SESSION['username'] ?? 'Admin');
+// ตรวจสอบสิทธิ์ admin
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../login.php");
+    exit;
+}
+$username = htmlspecialchars($_SESSION['username'] ?? 'ผู้ดูแลระบบ');
 ?>
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-    <meta charset="UTF-8">
-    <title>แผงควบคุมผู้ดูแลระบบ</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>แผงควบคุมผู้ดูแลระบบ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- ใช้ Bootstrap เวอร์ชันเดียวกับหน้า Login -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <style>
-        body{
-            background-color:#d0ebff; /* โทนเดียวกับหน้า Login */
-            min-height:100vh;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            margin:0;
-        }
-        .dash-box{
-            background:#fff;
-            width:100%;
-            max-width:900px;          /* กว้างกว่า login เล็กน้อยเพื่อใส่ปุ่มได้ */
-            padding:2.5rem;
-            border-radius:12px;
-            box-shadow:0 6px 20px rgba(0,0,0,.20);
-        }
-        .dash-title{
-            font-size:2rem;
-            font-weight:700;
-            text-align:center;
-            margin-bottom: .25rem;
-        }
-        .dash-sub{
-            text-align:center;
-            color:#6c757d;
-            margin-bottom:1.75rem;
-        }
-        .action-card{
-            border:1px solid rgba(0,0,0,.06);
-            border-radius:12px;
-            padding:1rem;
-            height:100%;
-            transition:transform .15s ease, box-shadow .15s ease;
-            background:#f8f9fa;
-        }
-        .action-card:hover{
-            transform:translateY(-2px);
-            box-shadow:0 8px 20px rgba(0,0,0,.12);
-            background:#ffffff;
-        }
-        .action-title{
-            font-weight:700;
-            margin-bottom:.5rem;
-        }
-        .btn-big{
-            padding:.75rem 1rem;
-            font-size:1.05rem;
-            border-radius:10px;
-            width:100%;
-        }
-        .top-bar{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:12px;
-            margin-bottom:1rem;
-            flex-wrap:wrap;
-        }
-        .hello{
-            font-weight:600;
-        }
-    </style>
+  <style>
+    body {
+      background-color:#d0ebff; /* ฟ้าอ่อน */
+      min-height:100vh;
+      font-family: 'Kanit', sans-serif;
+    }
+    .topbar {
+      background-color:#74c0fc; /* ฟ้าเข้ม */
+      box-shadow:0 4px 12px rgba(0,0,0,.15);
+    }
+    .page-box {
+      max-width:1200px;
+      margin:24px auto;
+      background:#fff;
+      border-radius:12px;
+      box-shadow:0 6px 20px rgba(0,0,0,.15);
+      padding:24px;
+    }
+    .hello-chip {
+      display:inline-flex; align-items:center;
+      padding:.45rem .8rem; border-radius:999px;
+      background:#e7f5ff; border:1px solid #74c0fc;
+      color:#0d3b66; font-weight:500;
+    }
+    .menu-card {
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:12px;
+      background:#f8f9fa;
+      transition:transform .15s ease, box-shadow .15s ease;
+      box-shadow:0 4px 14px rgba(0,0,0,.08);
+    }
+    .menu-card:hover {
+      transform:translateY(-3px);
+      box-shadow:0 10px 24px rgba(0,0,0,.12);
+      background:#fff;
+    }
+    .btn-blue {
+      background-color:#339af0;
+      border:none;
+      color:#fff;
+      border-radius:999px;
+    }
+    .btn-blue:hover { background-color:#228be6; }
+    .btn-outline-blue {
+      border:1px solid #339af0;
+      color:#1971c2;
+      border-radius:999px;
+    }
+    .btn-outline-blue:hover {
+      background:#e7f5ff;
+      border-color:#228be6;
+      color:#0d3b66;
+    }
+    .section-title {
+      color:#0d3b66;
+      font-weight:700;
+    }
+    .soft-footer {
+      color:#495057;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="dash-box container-fluid">
-        <!-- หัวเรื่อง + ผู้ใช้ -->
-        <div class="dash-title">แผงควบคุมผู้ดูแลระบบ</div>
-        <div class="dash-sub">ยินดีต้อนรับ, <span class="hello"><?= $username ?></span></div>
 
-        <div class="top-bar">
-            <div class="text-muted small">
-                เข้าสู่ระบบด้วยสิทธิ์: <span class="badge text-bg-primary">Admin</span>
-            </div>
-            <div class="ms-auto">
-                <a href="../logout.php" class="btn btn-outline-secondary btn-sm">ออกจากระบบ</a>
-            </div>
-        </div>
+  <!-- Topbar -->
+  <nav class="topbar navbar navbar-expand-lg">
+    <div class="container d-flex justify-content-between align-items-center">
+      <span class="navbar-brand fw-bold text-white">
+        แผงควบคุมผู้ดูแลระบบ
+      </span>
+      <div class="d-flex align-items-center gap-2">
+        <span class="hello-chip">
+          admin/ <?= $username ?>
+        </span>
+        <a href="../logout.php" class="btn btn-outline-light btn-sm">
+          ออกจากระบบ
+        </a>
+      </div>
+    </div>
+  </nav>
 
-        <!-- ปุ่มแบบการ์ด + ปุ่มหลักด้านล่าง (ทั้งสองวิธีรองรับ) -->
-        <div class="row g-3 mb-3">
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="action-card d-flex flex-column">
-                    <div class="action-title">จัดการสินค้า</div>
-                    <div class="text-muted mb-3 small">เพิ่ม/แก้ไข/ลบ สินค้าในร้าน</div>
-                    <a href="products.php" class="btn btn-primary btn-big mt-auto">ไปที่สินค้า</a>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="action-card d-flex flex-column">
-                    <div class="action-title">คำสั่งซื้อ</div>
-                    <div class="text-muted mb-3 small">ติดตามสถานะคำสั่งซื้อ</div>
-                    <a href="orders.php" class="btn btn-success btn-big mt-auto">ไปที่คำสั่งซื้อ</a>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="action-card d-flex flex-column">
-                    <div class="action-title">สมาชิก</div>
-                    <div class="text-muted mb-3 small">รายชื่อ/สิทธิ์ผู้ใช้</div>
-                    <a href="users.php" class="btn btn-warning btn-big mt-auto">ไปที่สมาชิก</a>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="action-card d-flex flex-column">
-                    <div class="action-title">หมวดหมู่</div>
-                    <div class="text-muted mb-3 small">จัดกลุ่มสินค้าให้เป็นระบบ</div>
-                    <a href="category.php" class="btn btn-dark btn-big mt-auto">ไปที่หมวดหมู่</a>
-                </div>
-            </div>
+  <!-- Content -->
+  <main class="page-box">
+    <h2 class="section-title mb-4">เมนูหลัก</h2>
+    <div class="row g-3 g-md-4">
+      <!-- จัดการสินค้า -->
+      <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card menu-card h-100 p-3">
+          <h5 class="fw-bold mb-1">สินค้า</h5>
+          <small class="text-muted d-block mb-2">เพิ่ม/แก้ไข/สต็อก</small>
+          <p class="text-secondary">ดูและแก้ไขรายการสินค้าได้ที่นี่</p>
+          <a href="products.php" class="btn btn-blue w-100">ไปที่สินค้า</a>
         </div>
+      </div>
 
-        <!-- ปุ่มสไตล์เดิม (สำรอง) -->
-        <div class="row g-3">
-            <div class="col-12 col-sm-6 col-lg-3">
-                <a href="products.php" class="btn btn-primary w-100 py-3">จัดการสินค้า</a>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <a href="orders.php" class="btn btn-success w-100 py-3">จัดการคำสั่งซื้อ</a>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <a href="users.php" class="btn btn-warning w-100 py-3">จัดการสมาชิก</a>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <a href="category.php" class="btn btn-dark w-100 py-3">จัดการหมวดหมู่</a>
-            </div>
+      <!-- คำสั่งซื้อ -->
+      <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card menu-card h-100 p-3">
+          <h5 class="fw-bold mb-1">คำสั่งซื้อ</h5>
+          <small class="text-muted d-block mb-2">ตรวจสอบสถานะ</small>
+          <p class="text-secondary">ติดตามออเดอร์และอัปเดตได้รวดเร็ว</p>
+          <a href="orders.php" class="btn btn-blue w-100">ไปที่คำสั่งซื้อ</a>
         </div>
+      </div>
+
+      <!-- สมาชิก -->
+      <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card menu-card h-100 p-3">
+          <h5 class="fw-bold mb-1">สมาชิก</h5>
+          <small class="text-muted d-block mb-2">บทบาท/สิทธิ์</small>
+          <p class="text-secondary">จัดการผู้ใช้และสิทธิ์การใช้งาน</p>
+          <a href="users.php" class="btn btn-blue w-100">ไปที่สมาชิก</a>
+        </div>
+      </div>
+
+      <!-- หมวดหมู่ -->
+      <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card menu-card h-100 p-3">
+          <h5 class="fw-bold mb-1">หมวดหมู่</h5>
+          <small class="text-muted d-block mb-2">จัดระเบียบสินค้า</small>
+          <p class="text-secondary">เพิ่ม/แก้ไขหมวดหมู่สินค้า</p>
+          <a href="category.php" class="btn btn-blue w-100">ไปที่หมวดหมู่</a>
+        </div>
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="text-center mt-4">
+      <a href="../logout.php" class="btn btn-outline-blue">ออกจากระบบ</a>
+    </div>
+  </main>
+
+  <footer class="py-3 text-center soft-footer">
+    <small>ระบบผู้ดูแล · โทนฟ้าอ่อน</small>
+  </footer>
+
 </body>
 </html>

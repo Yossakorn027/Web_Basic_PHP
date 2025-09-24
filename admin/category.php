@@ -10,13 +10,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
         $stmt = $conn->prepare("INSERT INTO categories (category_name) VALUES (?)");
         $stmt->execute([$category_name]);
         $_SESSION['success'] = "เพิ่มหมวดหมู่สำเร็จแล้ว";
-        header("Location: category.php");
-        exit;
     } else {
         $_SESSION['error'] = "กรุณากรอกชื่อหมวดหมู่";
-        header("Location: category.php");
-        exit;
     }
+    header("Location: category.php");
+    exit;
 }
 
 // ลบหมวดหมู่
@@ -55,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_category'])) {
 // ดึงหมวดหมู่ทั้งหมด
 $categories = $conn->query("SELECT * FROM categories ORDER BY category_id ASC")->fetchAll(PDO::FETCH_ASSOC);
 
-// แสดงชื่อผู้ใช้ (ถ้ามี)
+// ชื่อผู้ใช้
 $username = htmlspecialchars($_SESSION['username'] ?? 'Admin');
 ?>
 <!DOCTYPE html>
@@ -65,12 +63,12 @@ $username = htmlspecialchars($_SESSION['username'] ?? 'Admin');
     <title>จัดการหมวดหมู่</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- ใช้เวอร์ชันเดียวกับหน้าที่ปรับก่อนหน้า -->
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
         body{
-            background-color:#d0ebff; /* โทนเดียวกับหน้า Login/Admin */
+            background-color:#d0ebff; /* Soft Blue */
             min-height:100vh;
             margin:0;
             display:flex;
@@ -85,33 +83,10 @@ $username = htmlspecialchars($_SESSION['username'] ?? 'Admin');
             border-radius:12px;
             box-shadow:0 6px 20px rgba(0,0,0,.20);
             padding:24px;
+            border:1px solid rgba(0,0,0,.08);
         }
         .btn-pill{ border-radius:10px; }
-        .card-modern{
-            border:1px solid rgba(0,0,0,.06);
-            border-radius:12px;
-            box-shadow:0 4px 14px rgba(0,0,0,.08);
-            background:#f8f9fa;
-        }
-        .card-modern:hover{ background:#ffffff; }
-        .dash-title{
-            font-size:1.8rem;
-            font-weight:700;
-            margin-bottom:.25rem;
-            text-align:center;
-        }
-        .dash-sub{
-            text-align:center;
-            color:#6c757d;
-            margin-bottom:1.25rem;
-        }
-        .table thead th{
-            background:#f1f5f9;
-            border-bottom:1px solid rgba(0,0,0,.08);
-        }
-        .table tbody td{
-            border-color:rgba(0,0,0,.06);
-        }
+
         .top-bar{
             display:flex;
             justify-content:space-between;
@@ -120,6 +95,38 @@ $username = htmlspecialchars($_SESSION['username'] ?? 'Admin');
             flex-wrap:wrap;
             margin-bottom:1rem;
         }
+
+        .card-modern{
+            border:1px solid rgba(0,0,0,.08);
+            border-radius:12px;
+            box-shadow:0 4px 14px rgba(0,0,0,.08);
+            background:#f8f9fa;
+        }
+        .card-modern:hover{ background:#ffffff; }
+
+        .dash-title{
+            font-size:1.8rem;
+            font-weight:700;
+            margin-bottom:.25rem;
+            text-align:center;
+            color:#0d3b66; /* heading blue */
+        }
+        .dash-sub{
+            text-align:center;
+            color:#495057;
+            margin-bottom:1.25rem;
+        }
+
+        .table thead th{
+            background:#e7f5ff;
+            border-bottom:1px solid rgba(0,0,0,.08);
+        }
+        .table tbody td{ border-color:rgba(0,0,0,.06); }
+
+        .btn-primary{ background-color:#339af0; border-color:#339af0; }
+        .btn-primary:hover{ background-color:#228be6; border-color:#228be6; }
+        .btn-warning{ background-color:#ffd43b; border-color:#ffd43b; color:#212529; }
+        .btn-danger{ background-color:#fa5252; border-color:#fa5252; }
     </style>
 </head>
 <body>

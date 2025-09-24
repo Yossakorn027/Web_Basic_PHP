@@ -3,11 +3,12 @@ session_start();
 require_once 'config.php';
 
 if (!isset($_GET['id'])) {
-  header('Location: index.php');
+  header('Location: indexmember.php');
   exit();
 }
-$product_id = (int)$_GET['id'];
 $isLoggedIn = isset($_SESSION['user_id']);
+
+$product_id = (int)$_GET['id'];
 
 $stmt = $conn->prepare("
   SELECT p.*, c.category_name
@@ -18,10 +19,19 @@ $stmt = $conn->prepare("
 $stmt->execute([$product_id]);
 $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// ถ้าไม่พบสินค้า
-if (!$product) {
-  header('Location: index.php');
-  exit();
+// เตรียมรูป: รองรับทั้ง image / image_url / image_path และ fallback
+$imgField = null;
+if (!empty($product['image']))       { $imgField = $product['image']; }
+elseif (!empty($product['image_url'])){ $imgField = $product['image_url']; }
+elseif (!empty($product['image_path'])){ $imgField = $product['image_path']; }
+
+if ($imgField) {
+  // ถ้าเป็น URL ภายนอกให้ใช้ตรง ๆ, ถ้าเป็นชื่อไฟล์ให้ชี้ไปโฟลเดอร์ product_images
+  $img = (preg_match('~^https?://~i', $imgField))
+        ? $imgField
+        : 'product_images/' . rawurlencode($imgField);
+} else {
+  $img = 'product_images/no-image.jpg';
 }
 ?>
 <!DOCTYPE html>
@@ -29,39 +39,36 @@ if (!$product) {
 <head>
   <meta charset="UTF-8">
   <title>รายละเอียดสินค้า</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- ใช้เวอร์ชันเดียวกับหน้าก่อนหน้า -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
   <style>
     body{
-      background-color:#d0ebff; /* โทนเดียวกับหน้า Login/Admin */
+      background-color:#d0ebff; /* ธีมเดียวกับหน้าอื่น ๆ */
       min-height:100vh;
       margin:0;
       display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      padding:24px 12px;
+      flex-direction:column;
+    }
+    .topbar{
+      background:#ffffffaa;
+      backdrop-filter: blur(6px);
+      border-bottom:1px solid rgba(0,0,0,.06);
     }
     .page-box{
-      background:#fff;
       width:100%;
-      max-width:1000px;
-      border-radius:12px;
-      box-shadow:0 6px 20px rgba(0,0,0,.20);
-      padding:24px;
+      max-width:1100px;
+      margin:24px auto;
+      padding:0 12px;
     }
-    .btn-pill{ border-radius:10px; }
     .card-modern{
       border:1px solid rgba(0,0,0,.06);
       border-radius:12px;
-      box-shadow:0 4px 14px rgba(0,0,0,.08);
       background:#f8f9fa;
+      box-shadow:0 6px 20px rgba(0,0,0,.12);
+      transition: background .15s ease;
     }
     .card-modern:hover{ background:#ffffff; }
-    .product-title{ font-weight:700; }
-    .meta{ color:#6c757d; }
-    .qty-input{ max-width:140px; }
+    .btn-pill{ border-radius:10px; }
     .img-wrap{
       width:100%;
       border-radius:12px;
@@ -70,80 +77,106 @@ if (!$product) {
       display:flex;
       align-items:center;
       justify-content:center;
-      aspect-ratio: 16/9;
+      aspect-ratio: 1/1; /* ดูดีบนมือถือ */
     }
     .img-wrap img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
+      width:100%; height:100%; object-fit:cover; display:block;
+    }
+    .price-tag{
+      font-weight:700;
+      padding:.4rem .75rem;
+      border-radius:999px;
+      background:#0d6efd;
+      color:#fff;
+      display:inline-flex;
+      align-items:center;
+      gap:.4rem;
+      box-shadow:0 6px 16px rgba(13,110,253,.25);
     }
   </style>
 </head>
 
 <body>
-  <div class="page-box">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <a href="index.php" class="btn btn-outline-secondary btn-pill">← กลับหน้ารายการสินค้า</a>
+  <!-- Top bar -->
+  <nav class="topbar">
+    <div class="page-box d-flex align-items-center" style="padding-top:12px;padding-bottom:12px;">
+      <a href="indexmember.php" class="btn btn-outline-secondary btn-pill">← กลับหน้ารายการสินค้า</a>
+      <span class="ms-auto text-muted small">รายละเอียดสินค้า</span>
     </div>
+  </nav>
 
-    <div class="card card-modern">
-      <div class="card-body">
-        <div class="row g-4">
-          <!-- ภาพสินค้า (ถ้ามีคอลัมน์ image หรือ image_url จะโชว์อัตโนมัติ) -->
-          <div class="col-12 col-md-6">
-            <div class="img-wrap">
-              <?php if (!empty($product['image_url'] ?? $product['image'] ?? null)): ?>
-                <img src="<?= htmlspecialchars(($product['image_url'] ?? $product['image'])) ?>" alt="<?= htmlspecialchars($product['product_name']) ?>">
+  <main class="page-box">
+    <?php if (!$product): ?>
+      <div class="alert alert-warning">ไม่พบสินค้า</div>
+      <a href="indexmember.php" class="btn btn-outline-secondary btn-pill mt-2">กลับหน้ารายการ</a>
+    <?php else: ?>
+      <div class="card card-modern">
+        <div class="card-body p-3 p-md-4">
+          <div class="row g-4">
+            <!-- ภาพสินค้า -->
+            <div class="col-12 col-md-5">
+              <div class="img-wrap">
+                <img src="<?= htmlspecialchars($img) ?>" alt="<?= htmlspecialchars($product['product_name']) ?>">
+              </div>
+            </div>
+
+            <!-- รายละเอียด -->
+            <div class="col-12 col-md-7 d-flex flex-column">
+              <h3 class="mb-1"><?= htmlspecialchars($product['product_name']) ?></h3>
+              <div class="text-muted mb-2">
+                หมวดหมู่: <?= htmlspecialchars($product['category_name'] ?? 'ทั่วไป') ?>
+              </div>
+
+              <div class="text-secondary mb-3" style="white-space:pre-line;">
+                <?= nl2br(htmlspecialchars($product['description'] ?? '')) ?>
+              </div>
+
+              <?php
+                $price = isset($product['price']) ? number_format((float)$product['price'], 2) : '0.00';
+                $stock = (int)($product['stock'] ?? 0);
+              ?>
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <span class="price-tag">฿<?= $price ?></span>
+                <?php if ($stock > 0): ?>
+                  <span class="badge text-bg-success rounded-pill">คงเหลือ: <?= $stock ?></span>
+                <?php else: ?>
+                  <span class="badge text-bg-danger rounded-pill">สินค้าหมด</span>
+                <?php endif; ?>
+              </div>
+
+              <?php if ($isLoggedIn): ?>
+                <form action="cart.php" method="post" class="row g-2 align-items-end mt-auto">
+                  <input type="hidden" name="product_id" value="<?= (int)$product['product_id'] ?>">
+                  <div class="col-auto">
+                    <label for="quantity" class="form-label mb-1">จำนวน</label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      style="max-width:140px"
+                      name="quantity"
+                      id="quantity"
+                      value="1"
+                      min="1"
+                      max="<?= max($stock, 0) ?>"
+                      <?= $stock <= 0 ? 'disabled' : '' ?>
+                      required
+                    >
+                  </div>
+                  <div class="col-auto">
+                    <button type="submit" class="btn btn-success btn-pill" <?= $stock <= 0 ? 'disabled' : '' ?>>
+                      เพิ่มในตะกร้า
+                    </button>
+                  </div>
+                </form>
               <?php else: ?>
-                <div class="text-muted">ไม่มีภาพสินค้า</div>
+                <div class="alert alert-info mt-3 mb-0">กรุณาเข้าสู่ระบบเพื่อสั่งซื้อ</div>
               <?php endif; ?>
             </div>
           </div>
-
-          <div class="col-12 col-md-6">
-            <h3 class="product-title mb-1"><?= htmlspecialchars($product['product_name']) ?></h3>
-            <div class="meta mb-3">หมวดหมู่: <?= htmlspecialchars($product['category_name'] ?? 'ไม่ระบุหมวดหมู่') ?></div>
-
-            <?php if (!empty($product['description'])): ?>
-              <p class="mb-3"><?= nl2br(htmlspecialchars($product['description'])) ?></p>
-            <?php endif; ?>
-
-            <p class="mb-1"><strong>ราคา:</strong> <?= number_format((float)$product['price'], 2) ?> บาท</p>
-            <p class="mb-3">
-              <strong>คงเหลือ:</strong>
-              <?=
-                is_numeric($product['stock']) ? (int)$product['stock'] . ' ชิ้น' : htmlspecialchars($product['stock']) . ' ชนิด'
-              ?>
-            </p>
-
-            <?php if ($isLoggedIn): ?>
-              <form action="cart.php" method="post" class="row g-2 align-items-end">
-                <input type="hidden" name="product_id" value="<?= (int)$product['product_id'] ?>">
-                <div class="col-auto">
-                  <label for="quantity" class="form-label mb-1">จำนวน</label>
-                  <input
-                    type="number"
-                    class="form-control qty-input"
-                    name="quantity"
-                    id="quantity"
-                    value="1"
-                    min="1"
-                    max="<?= htmlspecialchars($product['stock']) ?>"
-                    required
-                  >
-                </div>
-                <div class="col-auto">
-                  <button type="submit" class="btn btn-success btn-pill">เพิ่มในตะกร้า</button>
-                </div>
-              </form>
-            <?php else: ?>
-              <div class="alert alert-info mt-3 mb-0">กรุณาเข้าสู่ระบบเพื่อสั่งสินค้า</div>
-            <?php endif; ?>
-          </div>
         </div>
       </div>
-    </div>
-  </div>
+    <?php endif; ?>
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

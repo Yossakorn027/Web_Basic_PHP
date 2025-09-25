@@ -24,7 +24,8 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     body {
       font-family: 'Kanit', sans-serif;
       min-height: 100vh;
-      background-color: #d0ebff; /* ฟ้าอ่อนเหมือนหน้า Login */
+      background-color: #d0ebff;
+      /* ฟ้าอ่อนเหมือนหน้า Login */
     }
 
     .topbar {
@@ -96,6 +97,7 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
           </span>
           <a href="profile.php" class="btn btn-outline-light"><i class="bi bi-person"></i> โปรไฟล์</a>
           <a href="cart.php" class="btn btn-outline-light"><i class="bi bi-bag"></i> ตะกร้า</a>
+          <a href="orders.php" class="btn btn-outline-light"><i class="bi bi-bag"></i> ประวัติการสั่งซื้อ</a>
           <a href="logout.php" class="btn btn-outline-light"><i class="bi bi-door-open"></i> ออก</a>
         <?php else: ?>
           <a href="login.php" class="btn btn-primary">เข้าสู่ระบบ</a>
@@ -114,8 +116,8 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
           ? 'product_images/' . rawurlencode($p['image'])
           : 'product_images/no-image.jpg';
 
-        $isNew = isset($p['created_at']) && (time() - strtotime($p['created_at']) <= 7*24*3600);
-        $isHot = (int)$p['stock'] > 0 && (int)$p['stock'] < 5;
+        $isNew = isset($p['created_at']) && (time() - strtotime($p['created_at']) <= 7 * 24 * 3600);
+        $isHot = (int) $p['stock'] > 0 && (int) $p['stock'] < 5;
         ?>
         <div class="col-12 col-sm-6 col-lg-3">
           <div class="card product-card h-100 p-3">
@@ -125,30 +127,30 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
               <span class="badge bg-danger position-absolute top-0 start-0 m-2">HOT</span>
             <?php endif; ?>
 
-            <a href="product_detail.php?id=<?= (int)$p['product_id'] ?>">
+            <a href="product_detail.php?id=<?= (int) $p['product_id'] ?>">
               <img src="<?= htmlspecialchars($img) ?>" class="img-fluid w-100 product-thumb mb-3">
             </a>
 
             <div class="d-flex flex-column">
               <div class="product-meta mb-1"><?= htmlspecialchars($p['category_name'] ?? 'ทั่วไป') ?></div>
-              <a href="product_detail.php?id=<?= (int)$p['product_id'] ?>" class="text-decoration-none">
+              <a href="product_detail.php?id=<?= (int) $p['product_id'] ?>" class="text-decoration-none">
                 <div class="product-title"><?= htmlspecialchars($p['product_name']) ?></div>
               </a>
-              <div class="price my-2"><?= number_format((float)$p['price'], 2) ?> บาท</div>
+              <div class="price my-2"><?= number_format((float) $p['price'], 2) ?> บาท</div>
 
               <div class="mt-auto d-flex gap-2">
                 <?php if ($isLoggedIn): ?>
                   <form action="cart.php" method="post" class="d-inline-flex gap-2 flex-fill">
-                    <input type="hidden" name="product_id" value="<?= (int)$p['product_id'] ?>">
+                    <input type="hidden" name="product_id" value="<?= (int) $p['product_id'] ?>">
                     <input type="hidden" name="quantity" value="1">
                     <button type="submit" class="btn btn-sm btn-primary flex-fill">
-                      <i class="bi bi-bag-plus"></i> เพิ่ม
+                      <i class="bi bi-bag-plus"></i> เพิ่มในตะกร้า
                     </button>
                   </form>
                 <?php else: ?>
                   <small class="text-muted">เข้าสู่ระบบเพื่อสั่งซื้อ</small>
                 <?php endif; ?>
-                <a href="product_detail.php?id=<?= (int)$p['product_id'] ?>" class="btn btn-sm btn-outline-primary">
+                <a href="product_detail.php?id=<?= (int) $p['product_id'] ?>" class="btn btn-sm btn-outline-primary">
                   รายละเอียด
                 </a>
               </div>
@@ -167,4 +169,5 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
